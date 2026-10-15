@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from playwright.sync_api import Browser, Page, sync_playwright
+from playwright.sync_api import Browser, Page, expect, sync_playwright
 
 
 @dataclass
@@ -15,6 +15,9 @@ class InstitutionStats:
 
 
 items_collections_regex = re.compile(r"Search ([0-9,]+) items? in (\d+) collections?")
+items_collections_ready_regex = re.compile(
+    r"\s*Search (?:0 items? in 0|[0-9,]+ items? in [1-9][0-9,]*) collections?\s*"
+)
 
 
 def process_page(page: Page) -> InstitutionStats | None:
@@ -23,9 +26,14 @@ def process_page(page: Page) -> InstitutionStats | None:
         timeout=120_000
     )
     print(title)
-    items_collections: str = page.locator(".header-total-items").inner_text(
-        timeout=120_000
+    counts = page.locator(".header-total-items")
+    # The item count arrives before the collection count. Accept empty
+    # institutions, but wait while a populated institution shows 0 collections.
+    expect(counts).to_have_text(
+        items_collections_ready_regex,
+        timeout=120_000,
     )
+    items_collections: str = counts.inner_text(timeout=120_000)
     print(items_collections)
 
     items_collections_matches: re.Match[str] | None = re.match(
