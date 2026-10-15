@@ -8,9 +8,13 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "bs4>=0.0.2",
+    "click>=8.5.0",
+    "playwright>=1.64.0",
     "requests>=2.34.2",
 ]
+
+[project.scripts]
+stats = "stats.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]
@@ -19,5 +23,19 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
-    "ruff>=0.17.0",
+    "ruff==0.17.1",
+]
+
+[tool.ruff.lint]
+extend-select = [
+    "B",    # flake8-bugbear: likely bugs and common pitfalls
+    "C4",   # flake8-comprehensions: improve comprehensions
+    "DTZ",  # Datetime should use Timezone
+    "I",    # isort: sort imports
+    "PTH",  # Pathlib
+    "RUF",  # Ruff-specific checks
+    "S",    # Security
+    "SIM",  # flake8-simplify: simplify unnecessarily complex code
+    "SIM",  # Simplicity
+    "UP",   # pyupgrade: modern Python syntax
 ]
