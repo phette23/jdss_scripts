@@ -19,6 +19,7 @@ items_collections_regex = re.compile(r"Search ([0-9,]+) items? in (\d+) collecti
 items_collections_ready_regex = re.compile(
     r"\s*Search (?:0 items? in 0|[0-9,]+ items? in [1-9][0-9,]*) collections?\s*"
 )
+no_results_regex = re.compile(r"\bNo results\b", re.IGNORECASE)
 
 
 def process_page(page: Page) -> InstitutionStats | None:
@@ -28,6 +29,20 @@ def process_page(page: Page) -> InstitutionStats | None:
     )
     print(title)
     counts = page.locator(".header-total-items")
+    empty_header = page.locator(".portal-page-header-wrapper").filter(
+        has_text=no_results_regex
+    )
+    # Empty portals omit the counts element entirely. Wait for either page
+    # state so a counts element that has not loaded yet is not treated as zero.
+    expect(counts.or_(empty_header).first).to_be_visible(timeout=120_000)
+    if counts.count() == 0 and empty_header.count() > 0:
+        return InstitutionStats(
+            collections=0,
+            items=0,
+            institution=title,
+            updated_date=datetime.now(ZoneInfo("America/Los_Angeles")),
+            url=page.url,
+        )
     # The item count arrives before the collection count. Accept empty
     # institutions, but wait while a populated institution shows 0 collections.
     expect(counts).to_have_text(
