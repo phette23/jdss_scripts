@@ -32,13 +32,18 @@ def main(urls_file: Path, output_file: Path, limit: int):
     stats: list[InstitutionStats] = scrape_urls(urls, limit=limit)
     print(f"Got data for {len(stats)} institutions, writing to {output_file}")
 
-    with Path.open(output_file) as fh:
+    with Path.open(output_file, "w") as fh:
         writer = csv.writer(fh)
         header_row: list[str] = ["Institution", "Collections", "Items", "URL"]
         writer.writerow(header_row)
         print("\t".join(header_row))
         for org in stats:
-            org_info: list[Any] = [org.institution, org.collections, org.items, org.url]
+            org_info: list[Any] = [
+                org.institution,
+                str(org.collections),
+                str(org.items),
+                org.url,
+            ]
             writer.writerow(org_info)
             # TODO rich table
             print("\t".join(org_info))
