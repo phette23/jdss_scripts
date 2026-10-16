@@ -12,6 +12,7 @@ class InstitutionStats:
     items: int
     institution: str
     updated_date: datetime
+    url: str
 
 
 items_collections_regex = re.compile(r"Search ([0-9,]+) items? in (\d+) collections?")
@@ -47,6 +48,7 @@ def process_page(page: Page) -> InstitutionStats | None:
             items=items,
             institution=title,
             updated_date=datetime.now(ZoneInfo("America/Los_Angeles")),
+            url=page.url,
         )
     else:
         print("Error parsing collections data from page")
